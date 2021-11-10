@@ -1,7 +1,5 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const messageSchema = mongoose.Schema({
+const messageSchema = mongoose.Schema({}, { minimize: false });
 
-}, { minimize: false });
-
-module.exports = mongoose.model('Message', messageSchema);
+module.exports = mongoose.model("Message", messageSchema);
