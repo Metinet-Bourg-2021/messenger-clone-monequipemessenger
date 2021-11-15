@@ -2,6 +2,7 @@ require("dotenv/config");
 const express = require("express");
 const app = express();
 const http = require("http");
+const mongoose = require("mongoose");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const config = require("./config.json");
@@ -15,6 +16,15 @@ app.get("/", (req, res) => {
 server.listen(config.port, () => {
   console.log("Server is listening");
 });
+
+mongoose.connect(
+  `${config.database.server}/${config.database.name}`,
+  {},
+  (err) => {
+    isDBConnected = !err;
+    console.log(err || "Connexion à la base réussie !!!");
+  }
+);
 
 io.on("connection", (socket) => {
   //Penser a conserver le socket pour pouvoir s'en servir plus tard
