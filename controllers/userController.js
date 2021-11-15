@@ -1,8 +1,14 @@
-const { NOT_VALID_USERNAMES, SUCCESS, NOT_FOUND_USER } = require("../codes");
+const {
+  NOT_VALID_USERNAMES,
+  SUCCESS,
+  NOT_FOUND_USER,
+  NOT_AUTHENTICATED,
+} = require("../codes");
 const User = require("../models/User");
 const { getRandomURL } = require("../pictures");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const checkAuth = require("../auth");
 
 const SALT_ROUND = 10;
 
@@ -59,4 +65,15 @@ const authenticate = async ({ username, password }, callback) => {
   }
 };
 
-module.exports = { authenticate };
+const getUsers = async ({ token }, callback) => {
+  if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
+  const users = await User.find();
+  const data = users.map((user) => ({
+    username: user.username,
+    picture_url: user.picture_url,
+    awake: user.awake,
+  }));
+  return callback({ code: SUCCESS, data: { users: data } });
+};
+
+module.exports = { authenticate, getUsers };

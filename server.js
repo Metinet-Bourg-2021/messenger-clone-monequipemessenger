@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const config = require("./config.json");
-const { authenticate } = require("./controllers/userController");
+const { authenticate, getUsers } = require("./controllers/userController");
 
 const io = new Server(server, { cors: { origin: "*" } });
 
@@ -33,9 +33,7 @@ io.on("connection", (socket) => {
 
   socket.on("@authenticate", authenticate);
 
-  socket.on("@getUsers", ({ token }, callback) => {
-    callback({ code: "SUCCESS", data: {} });
-  });
+  socket.on("@getUsers", getUsers);
   socket.on(
     "@getOrCreateOneToOneConversation",
     ({ token, username }, callback) => {
