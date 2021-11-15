@@ -1,16 +1,17 @@
 const jwt = require("jsonwebtoken");
+const User = require("./models/User");
 
-function checkAuth(token) {
-  console.log(token);
+const checkAuth = async (token) => {
   if (!token) {
     return false;
   }
-  const decodedToken = jwt.verify(token, "secret_key");
+  const decodedToken = jwt.verify(token, process.env.JWT_KEY);
   const userId = decodedToken.userId;
-  if (req.body.userId && req.body.userId !== userId) {
-    return false;
+  const isUserIDExist = await User.findById(userId);
+  if (userId && isUserIDExist) {
+    return true;
   }
-  return true;
-}
+  return false;
+};
 
 module.exports = checkAuth;
