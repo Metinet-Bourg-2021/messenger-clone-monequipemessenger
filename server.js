@@ -6,6 +6,10 @@ const mongoose = require("mongoose");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const config = require("./config.json");
+const {
+  createManyToManyConversation,
+  getConversations,
+} = require("./controllers/conversationController");
 const { authenticate, getUsers } = require("./controllers/userController");
 
 const io = new Server(server, { cors: { origin: "*" } });
@@ -40,15 +44,8 @@ io.on("connection", (socket) => {
       callback({ code: "SUCCESS", data: {} });
     }
   );
-  socket.on(
-    "@createManyToManyConversation",
-    ({ token, usernames }, callback) => {
-      callback({ code: "SUCCESS", data: {} });
-    }
-  );
-  socket.on("@getConversations", ({ token }, callback) => {
-    callback({ code: "SUCCESS", data: {} });
-  });
+  socket.on("@createManyToManyConversation", createManyToManyConversation);
+  socket.on("@getConversations", getConversations);
 
   socket.on("@postMessage", ({ token, conversation_id, content }, callback) => {
     callback({ code: "SUCCESS", data: {} });
