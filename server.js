@@ -4,6 +4,7 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const config = require("./config.json");
 
 const io = new Server(server, { cors: { origin: "*" } });
 
@@ -11,7 +12,7 @@ app.get("/", (req, res) => {
   res.send("A utiliser pour du debug si vous avez besoin...");
 });
 
-server.listen(process.env.PORT, () => {
+server.listen(config.port, () => {
   console.log("Server is listening");
 });
 
