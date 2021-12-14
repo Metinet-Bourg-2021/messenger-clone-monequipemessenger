@@ -9,6 +9,7 @@ const config = require("./config.json");
 const {
   createManyToManyConversation,
   getConversations,
+  createOneToOneConversation,
 } = require("./controllers/conversationController");
 const { authenticate, getUsers } = require("./controllers/userController");
 
@@ -38,12 +39,7 @@ io.on("connection", (socket) => {
   socket.on("@authenticate", authenticate);
 
   socket.on("@getUsers", getUsers);
-  socket.on(
-    "@getOrCreateOneToOneConversation",
-    ({ token, username }, callback) => {
-      callback({ code: "SUCCESS", data: {} });
-    }
-  );
+  socket.on("@getOrCreateOneToOneConversation", createOneToOneConversation);
   socket.on("@createManyToManyConversation", createManyToManyConversation);
   socket.on("@getConversations", getConversations);
 

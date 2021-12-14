@@ -4,12 +4,45 @@ const { NOT_AUTHENTICATED, SUCCESS } = require("../codes");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 
+const createOneToOneConversation = async ({ token, username }, callback) => {
+  if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
+
+  const user = await User.find({ username });
+
+  const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+  const userOfToken = await User.findById(decodedToken.userId);
+
+  try {
+    const createdConversation = await Conversation.create({
+      type: "one_to_one",
+      participants: [username, userOfToken.username],
+      messages: [],
+      title: null,
+      theme: "BLUE",
+      updated_at: Date.now(),
+      seen: {},
+      typing: {},
+    });
+
+    return callback({
+      code: SUCCESS,
+      data: {
+        conversation: {
+          ...createdConversation._doc,
+          id: createdConversation._id,
+        },
+      },
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 const createManyToManyConversation = async ({ token, usernames }, callback) => {
   if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
 
   //Get existing users
   const users = await User.find({ username: usernames });
-  //   users = users.map((user) => user.username);
 
   //Add creator user
   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
@@ -24,7 +57,7 @@ const createManyToManyConversation = async ({ token, usernames }, callback) => {
         userOfToken.username,
       ],
       messages: [],
-      title: `Le titre ${Math.random()}`,
+      title: null,
       theme: "BLUE",
       updated_at: Date.now(),
       seen: {},
@@ -66,4 +99,8 @@ const getConversations = async ({ token }, callback) => {
   });
 };
 
-module.exports = { createManyToManyConversation, getConversations };
+module.exports = {
+  createOneToOneConversation,
+  createManyToManyConversation,
+  getConversations,
+};
