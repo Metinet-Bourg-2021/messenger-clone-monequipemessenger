@@ -34,7 +34,10 @@ const createManyToManyConversation = async ({ token, usernames }, callback) => {
     return callback({
       code: SUCCESS,
       data: {
-        conversation: { id: createdConversation._id, ...createdConversation },
+        conversation: {
+          id: createdConversation._id,
+          ...createdConversation._doc,
+        },
       },
     });
   } catch (error) {
