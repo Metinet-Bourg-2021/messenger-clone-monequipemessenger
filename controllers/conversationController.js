@@ -86,8 +86,8 @@ const getConversations = async ({ token }, callback) => {
 
   const conversations = await Conversation.find({
     participants: userOfToken.username,
-  });
-
+  }).populate("messages");
+  console.log(conversations);
   return callback({
     code: SUCCESS,
     data: {

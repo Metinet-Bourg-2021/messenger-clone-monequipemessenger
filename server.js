@@ -11,6 +11,7 @@ const {
   getConversations,
   createOneToOneConversation,
 } = require("./controllers/conversationController");
+const { saveMessage } = require("./controllers/messageController");
 const { authenticate, getUsers } = require("./controllers/userController");
 
 const io = new Server(server, { cors: { origin: "*" } });
@@ -43,9 +44,7 @@ io.on("connection", (socket) => {
   socket.on("@createManyToManyConversation", createManyToManyConversation);
   socket.on("@getConversations", getConversations);
 
-  socket.on("@postMessage", ({ token, conversation_id, content }, callback) => {
-    callback({ code: "SUCCESS", data: {} });
-  });
+  socket.on("@postMessage", saveMessage);
   socket.on(
     "@seeConversation",
     ({ token, conversation_id, message_id }, callback) => {

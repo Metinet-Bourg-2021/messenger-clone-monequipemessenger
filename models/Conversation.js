@@ -6,7 +6,9 @@ const conversationSchema = mongoose.Schema(
   {
     type: { type: String },
     participants: { type: [String] },
-    messages: { type: [String] },
+    messages: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
+    },
     title: { type: String },
     theme: { type: String },
     updated_at: { type: Date },
