@@ -80,13 +80,17 @@ const getConversations = async ({ token }, callback) => {
   const conversations = await Conversation.find({
     participants: userOfToken.username,
   }).populate("messages");
-  console.log(conversations);
+
   return callback({
     code: SUCCESS,
     data: {
       conversations: conversations.map((conversation) => ({
         ...conversation._doc,
         id: conversation._doc._id,
+        messages: conversation._doc.messages.map((message) => ({
+          id: message._id,
+          ...message._doc,
+        })),
       })),
     },
   });
