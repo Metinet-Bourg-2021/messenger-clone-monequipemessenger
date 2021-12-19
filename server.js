@@ -12,7 +12,10 @@ const {
   getConversations,
   createOneToOneConversation,
 } = require("./controllers/conversationController");
-const { saveMessage } = require("./controllers/messageController");
+const {
+  saveMessage,
+  deleteMessage,
+} = require("./controllers/messageController");
 const { authenticate, getUsers } = require("./controllers/userController");
 
 const io = new Server(server, { cors: { origin: "*" } });
@@ -80,12 +83,7 @@ io.on("connection", (socket) => {
       callback({ code: "SUCCESS", data: {} });
     }
   );
-  socket.on(
-    "@deleteMessage",
-    ({ token, conversation_id, message_id, content }, callback) => {
-      callback({ code: "SUCCESS", data: {} });
-    }
-  );
+  socket.on("@deleteMessage", deleteMessage);
 
   socket.on("disconnect", (reason) => {});
 });

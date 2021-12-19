@@ -43,4 +43,31 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
   }
 };
 
-module.exports = { saveMessage };
+const deleteMessage = async (
+  { token, conversation_id, message_id },
+  callback
+) => {
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+    const userOfToken = await User.findById(decodedToken.userId);
+
+    const deletedMessage = await Message.findOneAndDelete({
+      _id: message_id,
+      from: userOfToken.username,
+    }).exec();
+
+    Conversation.findOneAndUpdate(
+      { _id: conversation_id },
+      { $pull: { messages: message_id } }
+    ).exec();
+
+    return callback({
+      code: SUCCESS,
+      data: { message: { ...deletedMessage, id: deletedMessage._id } },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+module.exports = { saveMessage, deleteMessage };
