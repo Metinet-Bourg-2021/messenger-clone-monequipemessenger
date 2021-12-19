@@ -1,12 +1,9 @@
-const checkAuth = require("../auth");
 const jwt = require("jsonwebtoken");
-const { NOT_AUTHENTICATED, SUCCESS } = require("../codes");
+const { SUCCESS } = require("../codes");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 
 const createOneToOneConversation = async ({ token, username }, callback) => {
-  if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
-
   const user = await User.find({ username });
 
   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
@@ -39,8 +36,6 @@ const createOneToOneConversation = async ({ token, username }, callback) => {
 };
 
 const createManyToManyConversation = async ({ token, usernames }, callback) => {
-  if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
-
   //Get existing users
   const users = await User.find({ username: usernames });
 
@@ -79,8 +74,6 @@ const createManyToManyConversation = async ({ token, usernames }, callback) => {
 };
 
 const getConversations = async ({ token }, callback) => {
-  if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
-
   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
   const userOfToken = await User.findById(decodedToken.userId);
 

@@ -1,14 +1,11 @@
 const res = require("express/lib/response");
 const jwt = require("jsonwebtoken");
-const checkAuth = require("../auth");
 const { SUCCESS, NOT_FOUND_USER } = require("../codes");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const User = require("../models/User");
 
 const saveMessage = async ({ token, conversation_id, content }, callback) => {
-  if (!checkAuth(token)) return callback({ code: NOT_AUTHENTICATED, data: {} });
-
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     const userOfToken = await User.findById(decodedToken.userId);

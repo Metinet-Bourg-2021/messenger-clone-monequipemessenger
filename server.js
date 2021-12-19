@@ -5,6 +5,7 @@ const http = require("http");
 const mongoose = require("mongoose");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const checkAuth = require("./auth");
 const config = require("./config.json");
 const {
   createManyToManyConversation,
@@ -39,12 +40,22 @@ io.on("connection", (socket) => {
 
   socket.on("@authenticate", authenticate);
 
-  socket.on("@getUsers", getUsers);
-  socket.on("@getOrCreateOneToOneConversation", createOneToOneConversation);
-  socket.on("@createManyToManyConversation", createManyToManyConversation);
-  socket.on("@getConversations", getConversations);
+  socket.on("@getUsers", checkAuth(getUsers));
 
-  socket.on("@postMessage", saveMessage);
+  socket.on(
+    "@getOrCreateOneToOneConversation",
+    checkAuth(createOneToOneConversation)
+  );
+
+  socket.on(
+    "@createManyToManyConversation",
+    checkAuth(createManyToManyConversation)
+  );
+
+  socket.on("@getConversations", checkAuth(getConversations));
+
+  socket.on("@postMessage", checkAuth(saveMessage));
+
   socket.on(
     "@seeConversation",
     ({ token, conversation_id, message_id }, callback) => {
