@@ -43,4 +43,27 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
   }
 };
 
-module.exports = { saveMessage };
+const editMessage = async ({ token, conversation_id, message_id, content }, callback) => {
+  const message = await Message.findById(message_id);
+  console.log(message_id);
+
+  console.log("here");
+  if (message) {
+    // message.content = content;
+
+    const UpdtMessage = await Message.updateOne(
+        { _id: message_id },
+        { content: content }
+    );
+
+    console.log(message);
+    console.log(UpdtMessage);
+
+    return callback({
+      code: SUCCESS,
+      data: {},
+    });
+  }
+}
+
+module.exports = { saveMessage, editMessage };

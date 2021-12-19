@@ -12,7 +12,7 @@ const {
   getConversations,
   createOneToOneConversation,
 } = require("./controllers/conversationController");
-const { saveMessage } = require("./controllers/messageController");
+const { saveMessage, editMessage } = require("./controllers/messageController");
 const { authenticate, getUsers } = require("./controllers/userController");
 
 const io = new Server(server, { cors: { origin: "*" } });
@@ -70,9 +70,7 @@ io.on("connection", (socket) => {
   );
   socket.on(
     "@editMessage",
-    ({ token, conversation_id, message_id, content }, callback) => {
-      callback({ code: "SUCCESS", data: {} });
-    }
+      checkAuth(editMessage)
   );
   socket.on(
     "@reactMessage",

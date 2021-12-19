@@ -6,6 +6,7 @@ const checkAuth = (fct) => async (params, callback) => {
   if (!params.token) {
     return callback({ code: NOT_AUTHENTICATED, data: {} });
   }
+  console.log(params)
 
   try {
     const decodedToken = jwt.verify(params.token, process.env.JWT_KEY);
