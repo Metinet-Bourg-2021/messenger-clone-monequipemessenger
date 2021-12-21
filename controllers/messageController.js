@@ -98,4 +98,11 @@ const editMessage = async (
   }
 };
 
-module.exports = { saveMessage, deleteMessage, editMessage };
+const replyMessage = async (
+    { token, conversation_id, message_id, content },
+    callback
+) => {
+
+};
+
+module.exports = { saveMessage, deleteMessage, editMessage, replyMessage };
