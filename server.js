@@ -11,6 +11,7 @@ const {
   createManyToManyConversation,
   getConversations,
   createOneToOneConversation,
+  seeConversation,
 } = require("./controllers/conversationController");
 const {
   saveMessage,
@@ -62,12 +63,7 @@ io.on("connection", (socket) => {
 
   socket.on("@postMessage", checkAuth(saveMessage));
 
-  socket.on(
-    "@seeConversation",
-    ({ token, conversation_id, message_id }, callback) => {
-      callback({ code: "SUCCESS", data: {} });
-    }
-  );
+  socket.on("@seeConversation", seeConversation);
   socket.on("@replyMessage", checkAuth(replyMessage));
   socket.on("@editMessage", checkAuth(editMessage));
   socket.on("@reactMessage", checkAuth(reactMessage));

@@ -1,5 +1,9 @@
 const jwt = require("jsonwebtoken");
-const { SUCCESS } = require("../codes");
+const {
+  SUCCESS,
+  NOT_FOUND_CONVERSATION,
+  NOT_FOUND_MESSAGE,
+} = require("../codes");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 
@@ -96,8 +100,56 @@ const getConversations = async ({ token }, callback) => {
   });
 };
 
+const seeConversation = async (
+  { token, conversation_id, message_id },
+  callback
+) => {
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+    const userOfToken = await User.findById(decodedToken.userId);
+
+    const conversation = await Conversation.findById(conversation_id);
+    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
+
+    if (
+      !conversation.messages.find(
+        (message) => message.toString() === message_id
+      )
+    )
+      return callback({ code: NOT_FOUND_MESSAGE });
+
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { _id: conversation_id },
+      {
+        $set: {
+          [`seen.${userOfToken.username}`]: { message_id, time: new Date() },
+        },
+      }
+    );
+
+    //set all never seen conversation user's to -1
+    updatedConversation.participants.forEach((participant) => {
+      if (!updatedConversation.seen[participant])
+        updatedConversation.seen[participant] = -1;
+    });
+
+    return callback({
+      code: SUCCESS,
+      data: {
+        conversation: {
+          ...updatedConversation._doc,
+          id: updatedConversation._id,
+        },
+      },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   createOneToOneConversation,
   createManyToManyConversation,
   getConversations,
+  seeConversation,
 };
