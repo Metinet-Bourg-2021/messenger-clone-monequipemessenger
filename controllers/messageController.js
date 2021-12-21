@@ -51,15 +51,22 @@ const deleteMessage = async (
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     const userOfToken = await User.findById(decodedToken.userId);
 
+    //REAL DELETE
     const deletedMessage = await Message.findOneAndDelete({
       _id: message_id,
       from: userOfToken.username,
-    }).exec();
+    });
 
     Conversation.findOneAndUpdate(
       { _id: conversation_id },
       { $pull: { messages: message_id } }
     ).exec();
+
+    //FAKE DELETE
+    // const updatedMessage = await Message.findOneAndUpdate(
+    //   { _id: message_id },
+    //   { deleted: true }
+    // );
 
     return callback({
       code: SUCCESS,
