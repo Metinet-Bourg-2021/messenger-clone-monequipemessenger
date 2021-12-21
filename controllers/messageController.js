@@ -70,7 +70,7 @@ const deleteMessage = async (
 
     return callback({
       code: SUCCESS,
-      data: { message: { ...deletedMessage, id: deletedMessage._id } },
+      data: {},
     });
   } catch (error) {
     console.error(error);
