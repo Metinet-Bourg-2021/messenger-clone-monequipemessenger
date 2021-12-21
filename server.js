@@ -16,6 +16,7 @@ const {
   saveMessage,
   deleteMessage,
   editMessage,
+  reactMessage,
   replyMessage,
 } = require("./controllers/messageController");
 const { authenticate, getUsers } = require("./controllers/userController");
@@ -67,17 +68,9 @@ io.on("connection", (socket) => {
       callback({ code: "SUCCESS", data: {} });
     }
   );
-  socket.on(
-    "@replyMessage",
-      checkAuth(replyMessage)
-  );
+  socket.on("@replyMessage", checkAuth(replyMessage));
   socket.on("@editMessage", checkAuth(editMessage));
-  socket.on(
-    "@reactMessage",
-    ({ token, conversation_id, message_id, reaction }, callback) => {
-      callback({ code: "SUCCESS", data: {} });
-    }
-  );
+  socket.on("@reactMessage", checkAuth(reactMessage));
   socket.on("@deleteMessage", deleteMessage);
 
   socket.on("disconnect", (reason) => {});
