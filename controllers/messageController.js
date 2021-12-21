@@ -45,9 +45,7 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
 
 const editMessage = async ({ token, conversation_id, message_id, content }, callback) => {
   const message = await Message.findById(message_id);
-  console.log(message_id);
 
-  console.log("here");
   if (message) {
     // message.content = content;
 
@@ -56,12 +54,9 @@ const editMessage = async ({ token, conversation_id, message_id, content }, call
         { content: content }
     );
 
-    console.log(message);
-    console.log(UpdtMessage);
-
     return callback({
       code: SUCCESS,
-      data: {},
+      data: {}, // conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }
     });
   }
 }
