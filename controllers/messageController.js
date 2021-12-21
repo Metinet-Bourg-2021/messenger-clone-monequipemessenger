@@ -84,16 +84,17 @@ const editMessage = async (
   const message = await Message.findById(message_id);
 
   if (message) {
-    // message.content = content;
 
-    const UpdtMessage = await Message.updateOne(
+    const UpdtMessage = await Message.findOneAndUpdate(
       { _id: message_id },
       { content: content }
     );
 
+    console.log(UpdtMessage);
+
     return callback({
       code: SUCCESS,
-      data: {}, // conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }
+      data: {conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }},
     });
   }
 };
