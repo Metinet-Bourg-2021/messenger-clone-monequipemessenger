@@ -81,21 +81,25 @@ const editMessage = async (
   { token, conversation_id, message_id, content },
   callback
 ) => {
-  const message = await Message.findById(message_id);
+  try {
+    const message = await Message.findById(message_id);
 
-  if (message) {
+    if (message) {
 
-    const UpdtMessage = await Message.findOneAndUpdate(
-      { _id: message_id },
-      { content: content }
-    );
+      const UpdtMessage = await Message.findOneAndUpdate(
+        { _id: message_id },
+        { content: content }
+      );
 
-    console.log(UpdtMessage);
+      console.log(UpdtMessage);
 
-    return callback({
-      code: SUCCESS,
-      data: {conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }},
-    });
+      return callback({
+        code: SUCCESS,
+        data: {conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }},
+      });
+    }
+  } catch (err) {
+    console.error(err);
   }
 };
 
