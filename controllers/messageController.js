@@ -1,6 +1,11 @@
 const res = require("express/lib/response");
 const jwt = require("jsonwebtoken");
-const { SUCCESS, NOT_FOUND_USER } = require("../codes");
+const {
+  SUCCESS,
+  NOT_FOUND_USER,
+  NOT_FOUND_MESSAGE,
+  NOT_VALID_CONTENT,
+} = require("../codes");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const User = require("../models/User");
@@ -98,4 +103,37 @@ const editMessage = async (
   }
 };
 
-module.exports = { saveMessage, deleteMessage, editMessage };
+const reactMessage = async (
+  { token, conversation_id, message_id, reaction },
+  callback
+) => {
+  const possibleValues = ["HEART", "HAPPY", "SAD", "THUMB"];
+  if (!possibleValues.findOne((value) => value === reaction))
+    return callback({ code: NOT_VALID_CONTENT, data: {} });
+
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+    const userOfToken = await User.findById(decodedToken.userId);
+
+    const message = await Message.findById(message_id);
+    if (!message) return callback({ code: NOT_FOUND_MESSAGE });
+
+    const updatedMessage = await Message.findOneAndUpdate(
+      { _id: message_id },
+      {
+        $set: {
+          [`reactions.${userOfToken.username}`]: reaction,
+        },
+      }
+    ).exec();
+
+    return callback({
+      code: SUCCESS,
+      data: { message: { ...updatedMessage._doc, id: updatedMessage._id } },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+module.exports = { saveMessage, deleteMessage, editMessage, reactMessage };
