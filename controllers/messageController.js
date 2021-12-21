@@ -77,4 +77,25 @@ const deleteMessage = async (
   }
 };
 
-module.exports = { saveMessage, deleteMessage };
+const editMessage = async (
+  { token, conversation_id, message_id, content },
+  callback
+) => {
+  const message = await Message.findById(message_id);
+
+  if (message) {
+    // message.content = content;
+
+    const UpdtMessage = await Message.updateOne(
+      { _id: message_id },
+      { content: content }
+    );
+
+    return callback({
+      code: SUCCESS,
+      data: {}, // conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }
+    });
+  }
+};
+
+module.exports = { saveMessage, deleteMessage, editMessage };
