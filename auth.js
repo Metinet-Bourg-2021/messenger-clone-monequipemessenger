@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const { NOT_AUTHENTICATED, NOT_FOUND_USER } = require("./codes");
 const User = require("./models/User");
 
-const checkAuth = (fct) => async (params, callback) => {
+const checkAuth = (fct, socket) => async (params, callback) => {
   if (!params.token) {
     return callback({ code: NOT_AUTHENTICATED, data: {} });
   }
@@ -12,7 +12,7 @@ const checkAuth = (fct) => async (params, callback) => {
     const userId = decodedToken.userId;
     const isUserIDExist = await User.findById(userId);
     if (userId && isUserIDExist) {
-      return fct(params, callback);
+      return fct(params, callback, socket);
     } else {
       return callback({ code: NOT_FOUND_USER, data: {} });
     }

@@ -16,7 +16,7 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
     const userOfToken = await User.findById(decodedToken.userId);
 
     const conversation = await Conversation.findOne({ _id: conversation_id });
-    if (!conversation) return callback({code: NOT_FOUND_CONVERSATION});
+    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
     const createdMessage = await Message.create({
       from: userOfToken.username,
@@ -31,17 +31,13 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
 
     await Conversation.updateOne(
       { _id: conversation_id },
-      { messages: [
-          ...conversation.messages,
-          createdMessage._id,
-        ] }
+      { messages: [...conversation.messages, createdMessage._id] }
     );
 
     return callback({
       code: SUCCESS,
       data: { message: { ...createdMessage._doc, id: createdMessage._id } },
     });
-
   } catch (err) {
     console.error(err);
   }
@@ -62,8 +58,8 @@ const deleteMessage = async (
     });
 
     await Conversation.findOneAndUpdate(
-        {_id: conversation_id},
-        {$pull: {messages: message_id}}
+      { _id: conversation_id },
+      { $pull: { messages: message_id } }
     ).exec();
 
     //FAKE DELETE
@@ -88,7 +84,7 @@ const editMessage = async (
   try {
     const message = await Message.findById(message_id);
 
-    if (!message) return callback({code: NOT_FOUND_MESSAGE});
+    if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
     const UpdtMessage = await Message.findOneAndUpdate(
       { _id: message_id },
@@ -98,7 +94,10 @@ const editMessage = async (
     console.log(UpdtMessage);
     return callback({
       code: SUCCESS,
-      data: {conversation_id: conversation_id, message: {...UpdtMessage, id: message_id }},
+      data: {
+        conversation_id: conversation_id,
+        message: { ...UpdtMessage, id: message_id },
+      },
     });
   } catch (err) {
     console.error(err);
@@ -107,7 +106,8 @@ const editMessage = async (
 
 const reactMessage = async (
   { token, conversation_id, message_id, reaction },
-  callback
+  callback,
+  socket
 ) => {
   const possibleValues = ["HEART", "HAPPY", "SAD", "THUMB"];
   if (!possibleValues.find((value) => value === reaction))
@@ -129,9 +129,14 @@ const reactMessage = async (
       }
     ).exec();
 
+    socket.emit("@messageReacted", {
+      conversation_id,
+      message: { ...updatedMessage._doc, id: updatedMessage._id },
+    });
+
     return callback({
       code: SUCCESS,
-      data: { message: { ...updatedMessage._doc, id: updatedMessage._id } },
+      data: {},
     });
   } catch (error) {
     console.error(error);
@@ -147,10 +152,10 @@ const replyMessage = async (
 
   try {
     const conversation = await Conversation.findOne({ _id: conversation_id });
-    if (!conversation) return callback({code: NOT_FOUND_CONVERSATION});
+    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
     const message = await Message.findById(message_id);
-    if (!message) return callback({code: NOT_FOUND_MESSAGE});
+    if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
     const createdMessage = await Message.create({
       from: userOfToken.username,
@@ -165,10 +170,7 @@ const replyMessage = async (
 
     await Conversation.updateOne(
       { _id: conversation_id },
-      { messages: [
-          ...conversation.messages,
-          createdMessage._id,
-        ] }
+      { messages: [...conversation.messages, createdMessage._id] }
     );
 
     return callback({

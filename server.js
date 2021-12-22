@@ -44,7 +44,6 @@ mongoose.connect(
 io.on("connection", (socket) => {
   //Penser a conserver le socket pour pouvoir s'en servir plus tard
   //Remplacer les callbacks par des fonctions dans d'autres fichiers.
-
   socket.on("@authenticate", authenticate);
 
   socket.on("@getUsers", checkAuth(getUsers));
@@ -66,8 +65,8 @@ io.on("connection", (socket) => {
   socket.on("@seeConversation", seeConversation);
   socket.on("@replyMessage", checkAuth(replyMessage));
   socket.on("@editMessage", checkAuth(editMessage));
-  socket.on("@reactMessage", checkAuth(reactMessage));
-  socket.on("@deleteMessage", deleteMessage);
+  socket.on("@reactMessage", checkAuth(reactMessage, socket));
+  socket.on("@deleteMessage", checkAuth(deleteMessage));
 
   socket.on("disconnect", (reason) => {});
 });
