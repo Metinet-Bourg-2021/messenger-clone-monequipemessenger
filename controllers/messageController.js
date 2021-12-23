@@ -121,6 +121,9 @@ const reactMessage = async (
     return callback({ code: NOT_VALID_CONTENT, data: {} });
 
   try {
+    const conversation = await Conversation.findById(conversation_id);
+    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
+
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     const userOfToken = await User.findById(decodedToken.userId);
 
@@ -137,11 +140,11 @@ const reactMessage = async (
       { new: true }
     );
 
-    console.log(users[userOfToken.username]);
-
-    users[userOfToken.username].emit("@messageReacted", {
-      conversation_id,
-      message: { ...updatedMessage._doc, id: updatedMessage._id },
+    conversation.participants.forEach((parti) => {
+      users[parti].emit("@messageReacted", {
+        conversation_id,
+        message: {...updatedMessage._doc, id: updatedMessage._id},
+      });
     });
 
     return callback({
