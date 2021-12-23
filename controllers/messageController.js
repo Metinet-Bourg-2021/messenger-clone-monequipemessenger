@@ -92,7 +92,7 @@ const editMessage = async (
       { content: content },
       { new: true }
     );
-     await Message.findById(message_id);
+    await Message.findById(message_id);
 
     socket.emit("@messageEdited", {
       conversation_id,
@@ -114,7 +114,7 @@ const editMessage = async (
 const reactMessage = async (
   { token, conversation_id, message_id, reaction },
   callback,
-  socket
+  users
 ) => {
   const possibleValues = ["HEART", "HAPPY", "SAD", "THUMB"];
   if (!possibleValues.find((value) => value === reaction))
@@ -137,7 +137,9 @@ const reactMessage = async (
       { new: true }
     );
 
-    socket.emit("@messageReacted", {
+    console.log(users[userOfToken.username]);
+
+    users[userOfToken.username].emit("@messageReacted", {
       conversation_id,
       message: { ...updatedMessage._doc, id: updatedMessage._id },
     });

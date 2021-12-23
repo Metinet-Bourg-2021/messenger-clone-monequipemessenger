@@ -41,10 +41,24 @@ mongoose.connect(
   }
 );
 
+const initAuth = (authFct, initUser) => (params, callback) => {
+  const auth = authFct(params, callback);
+  initUser(params.username);
+  return auth;
+};
+
+const users = {};
+
 io.on("connection", (socket) => {
   //Penser a conserver le socket pour pouvoir s'en servir plus tard
-  //Remplacer les callbacks par des fonctions dans d'autres fichiers.
-  socket.on("@authenticate", authenticate);
+  //Remplacer les callbacks par des fonctions dans d'autres fichiers
+
+  const handleSetUser = (username) => {
+    users[username] = socket;
+    console.log(users.length);
+  };
+
+  socket.on("@authenticate", initAuth(authenticate, handleSetUser));
 
   socket.on("@getUsers", checkAuth(getUsers));
 
@@ -64,8 +78,8 @@ io.on("connection", (socket) => {
 
   socket.on("@seeConversation", seeConversation);
   socket.on("@replyMessage", checkAuth(replyMessage));
-  socket.on("@editMessage", checkAuth(editMessage, socket));
-  socket.on("@reactMessage", checkAuth(reactMessage, socket));
+  socket.on("@editMessage", checkAuth(editMessage, users));
+  socket.on("@reactMessage", checkAuth(reactMessage, users));
   socket.on("@deleteMessage", checkAuth(deleteMessage));
 
   socket.on("disconnect", (reason) => {});
