@@ -22,7 +22,7 @@ const authenticate = async ({ username, password }, callback) => {
       });
 
       const token = jwt.sign({ userId: createdUser._id }, process.env.JWT_KEY, {
-        expiresIn: "1h",
+        expiresIn: "1j",
       });
       return callback({
         code: SUCCESS,

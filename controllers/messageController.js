@@ -140,10 +140,10 @@ const reactMessage = async (
       { new: true }
     );
 
-    conversation.participants.forEach((parti) => {
-      users[parti].emit("@messageReacted", {
+    conversation.participants.forEach((participant) => {
+      users[participant]?.emit("@messageReacted", {
         conversation_id,
-        message: {...updatedMessage._doc, id: updatedMessage._id},
+        message: { ...updatedMessage._doc, id: updatedMessage._id },
       });
     });
 
