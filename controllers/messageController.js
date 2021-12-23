@@ -79,24 +79,31 @@ const deleteMessage = async (
 
 const editMessage = async (
   { token, conversation_id, message_id, content },
-  callback
+  callback,
+  socket
 ) => {
   try {
     const message = await Message.findById(message_id);
 
     if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
-    const UpdtMessage = await Message.findOneAndUpdate(
+    const updatedMessage = await Message.findOneAndUpdate(
       { _id: message_id },
-      { content: content }
+      { content: content },
+      { new: true }
     );
+     await Message.findById(message_id);
 
-    console.log(UpdtMessage);
+    socket.emit("@messageEdited", {
+      conversation_id,
+      message: { ...updatedMessage._doc, id: updatedMessage._id },
+    });
+
     return callback({
       code: SUCCESS,
       data: {
         conversation_id: conversation_id,
-        message: { ...UpdtMessage, id: message_id },
+        message: { ...updatedMessage, id: message_id },
       },
     });
   } catch (err) {
@@ -126,8 +133,9 @@ const reactMessage = async (
         $set: {
           [`reactions.${userOfToken.username}`]: reaction,
         },
-      }
-    ).exec();
+      },
+      { new: true }
+    );
 
     socket.emit("@messageReacted", {
       conversation_id,

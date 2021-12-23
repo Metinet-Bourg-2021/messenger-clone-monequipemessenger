@@ -64,7 +64,7 @@ io.on("connection", (socket) => {
 
   socket.on("@seeConversation", seeConversation);
   socket.on("@replyMessage", checkAuth(replyMessage));
-  socket.on("@editMessage", checkAuth(editMessage));
+  socket.on("@editMessage", checkAuth(editMessage, socket));
   socket.on("@reactMessage", checkAuth(reactMessage, socket));
   socket.on("@deleteMessage", checkAuth(deleteMessage));
 
