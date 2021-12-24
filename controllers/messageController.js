@@ -11,9 +11,9 @@ const Message = require("../models/Message");
 const User = require("../models/User");
 
 const saveMessage = async (
-    { token, conversation_id, content },
-    callback,
-    users
+  { token, conversation_id, content },
+  callback,
+  socketsByUser
 ) => {
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
@@ -34,12 +34,12 @@ const saveMessage = async (
     });
 
     await Conversation.updateOne(
-        { _id: conversation_id },
-        { messages: [...conversation.messages, createdMessage._id] }
+      { _id: conversation_id },
+      { messages: [...conversation.messages, createdMessage._id] }
     );
 
     conversation.participants.forEach((participant) => {
-      users[participant]?.emit("@messageDelivered", {
+      socketsByUser[participant]?.emit("@messageDelivered", {
         conversation_id,
         message: { ...createdMessage._doc, id: createdMessage._id },
       });
@@ -55,9 +55,9 @@ const saveMessage = async (
 };
 
 const deleteMessage = async (
-    { token, conversation_id, message_id },
-    callback,
-    users
+  { token, conversation_id, message_id },
+  callback,
+  socketsByUser
 ) => {
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
@@ -73,8 +73,8 @@ const deleteMessage = async (
     });
 
     await Conversation.findOneAndUpdate(
-        { _id: conversation_id },
-        { $pull: { messages: message_id } }
+      { _id: conversation_id },
+      { $pull: { messages: message_id } }
     ).exec();
 
     //FAKE DELETE
@@ -84,7 +84,7 @@ const deleteMessage = async (
     // );
 
     conversation.participants.forEach((participant) => {
-      users[participant]?.emit("@messageDeleted", {
+      socketsByUser[participant]?.emit("@messageDeleted", {
         conversation_id,
         message_id,
       });
@@ -100,9 +100,9 @@ const deleteMessage = async (
 };
 
 const editMessage = async (
-    { token, conversation_id, message_id, content },
-    callback,
-    users
+  { token, conversation_id, message_id, content },
+  callback,
+  socketsByUser
 ) => {
   try {
     const conversation = await Conversation.findById(conversation_id);
@@ -112,14 +112,14 @@ const editMessage = async (
     if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
     const updatedMessage = await Message.findOneAndUpdate(
-        { _id: message_id },
-        { content: content },
-        { new: true }
+      { _id: message_id },
+      { content: content },
+      { new: true }
     );
     await Message.findById(message_id);
 
     conversation.participants.forEach((participant) => {
-      users[participant]?.emit("@messageEdited", {
+      socketsByUser[participant]?.emit("@messageEdited", {
         conversation_id,
         message: { ...updatedMessage._doc, id: updatedMessage._id },
       });
@@ -138,9 +138,9 @@ const editMessage = async (
 };
 
 const reactMessage = async (
-    { token, conversation_id, message_id, reaction },
-    callback,
-    users
+  { token, conversation_id, message_id, reaction },
+  callback,
+  socketsByUser
 ) => {
   const possibleValues = ["HEART", "HAPPY", "SAD", "THUMB"];
   if (!possibleValues.find((value) => value === reaction))
@@ -157,17 +157,17 @@ const reactMessage = async (
     if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
     const updatedMessage = await Message.findOneAndUpdate(
-        { _id: message_id },
-        {
-          $set: {
-            [`reactions.${userOfToken.username}`]: reaction,
-          },
+      { _id: message_id },
+      {
+        $set: {
+          [`reactions.${userOfToken.username}`]: reaction,
         },
-        { new: true }
+      },
+      { new: true }
     );
 
     conversation.participants.forEach((participant) => {
-      users[participant]?.emit("@messageReacted", {
+      socketsByUser[participant]?.emit("@messageReacted", {
         conversation_id,
         message: { ...updatedMessage._doc, id: updatedMessage._id },
       });
@@ -183,9 +183,9 @@ const reactMessage = async (
 };
 
 const replyMessage = async (
-    { token, conversation_id, message_id, content },
-    callback,
-    users
+  { token, conversation_id, message_id, content },
+  callback,
+  socketsByUser
 ) => {
   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
   const userOfToken = await User.findById(decodedToken.userId);
@@ -209,12 +209,12 @@ const replyMessage = async (
     });
 
     await Conversation.updateOne(
-        { _id: conversation_id },
-        { messages: [...conversation.messages, createdMessage._id] }
+      { _id: conversation_id },
+      { messages: [...conversation.messages, createdMessage._id] }
     );
 
     conversation.participants.forEach((participant) => {
-      users[participant]?.emit("@messageDelivered", {
+      socketsByUser[participant]?.emit("@messageDelivered", {
         conversation_id,
         message: { ...createdMessage._doc, id: createdMessage._id },
       });

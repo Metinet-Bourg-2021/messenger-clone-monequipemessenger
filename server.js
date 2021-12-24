@@ -41,10 +41,10 @@ mongoose.connect(
   }
 );
 
-const users = {};
+const socketsByUser = {};
 
 const initAuth = (authFct, initUser) => (params, callback) => {
-  const auth = authFct(params, callback, users);
+  const auth = authFct(params, callback, socketsByUser);
   initUser(params.username);
   return auth;
 };
@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
   //Remplacer les callbacks par des fonctions dans d'autres fichiers
 
   const handleSetUser = (username) => {
-    users[username] = socket;
+    socketsByUser[username] = socket;
   };
 
   socket.on("@authenticate", initAuth(authenticate, handleSetUser));
@@ -63,23 +63,23 @@ io.on("connection", (socket) => {
 
   socket.on(
     "@getOrCreateOneToOneConversation",
-    checkAuth(createOneToOneConversation, users)
+    checkAuth(createOneToOneConversation, socketsByUser)
   );
 
   socket.on(
     "@createManyToManyConversation",
-    checkAuth(createManyToManyConversation, users)
+    checkAuth(createManyToManyConversation, socketsByUser)
   );
 
   socket.on("@getConversations", checkAuth(getConversations));
 
-  socket.on("@postMessage", checkAuth(saveMessage, users));
+  socket.on("@postMessage", checkAuth(saveMessage, socketsByUser));
 
   socket.on("@seeConversation", seeConversation);
-  socket.on("@replyMessage", checkAuth(replyMessage, users));
-  socket.on("@editMessage", checkAuth(editMessage, users));
-  socket.on("@reactMessage", checkAuth(reactMessage, users));
-  socket.on("@deleteMessage", checkAuth(deleteMessage, users));
+  socket.on("@replyMessage", checkAuth(replyMessage, socketsByUser));
+  socket.on("@editMessage", checkAuth(editMessage, socketsByUser));
+  socket.on("@reactMessage", checkAuth(reactMessage, socketsByUser));
+  socket.on("@deleteMessage", checkAuth(deleteMessage, socketsByUser));
 
   socket.on("disconnect", (reason) => {});
 });

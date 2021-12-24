@@ -6,7 +6,11 @@ const jwt = require("jsonwebtoken");
 
 const SALT_ROUND = 10;
 
-const authenticate = async ({ username, password }, callback, users) => {
+const authenticate = async (
+  { username, password },
+  callback,
+  socketsByUser
+) => {
   if (!username || !password)
     return callback({ code: NOT_VALID_USERNAMES, data: {} });
   try {
@@ -25,7 +29,7 @@ const authenticate = async ({ username, password }, callback, users) => {
         expiresIn: "1d",
       });
 
-      Object.values(users).forEach((socket) => {
+      Object.values(socketsByUser).forEach((socket) => {
         socket.emit("@userCreated", {
           user: {
             username: createdUser.username,

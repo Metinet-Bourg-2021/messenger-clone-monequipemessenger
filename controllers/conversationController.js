@@ -11,7 +11,7 @@ const User = require("../models/User");
 const createOneToOneConversation = async (
   { token, username },
   callback,
-  users
+  socketsByUser
 ) => {
   const user = await User.find({ username });
 
@@ -33,7 +33,7 @@ const createOneToOneConversation = async (
     });
 
     createdConversation.participants.forEach((participant) =>
-      users[participant]?.emit("@conversationCreated", {
+      socketsByUser[participant]?.emit("@conversationCreated", {
         conversation: {
           ...createdConversation._doc,
           id: createdConversation._id,
@@ -58,7 +58,7 @@ const createOneToOneConversation = async (
 const createManyToManyConversation = async (
   { token, usernames },
   callback,
-  usersb
+  socketsByUser
 ) => {
   //Get existing users
   const users = await User.find({ username: usernames });
@@ -84,7 +84,7 @@ const createManyToManyConversation = async (
     });
     console.log(createdConversation.participants);
     createdConversation.participants.forEach((participant) => {
-      usersb[participant]?.emit("@conversationCreated", {
+      socketsByUser[participant]?.emit("@conversationCreated", {
         conversation: {
           ...createdConversation._doc,
           id: createdConversation._id,
