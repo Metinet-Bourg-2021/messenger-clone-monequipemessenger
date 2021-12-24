@@ -41,13 +41,13 @@ mongoose.connect(
   }
 );
 
+const users = {};
+
 const initAuth = (authFct, initUser) => (params, callback) => {
-  const auth = authFct(params, callback);
+  const auth = authFct(params, callback, users);
   initUser(params.username);
   return auth;
 };
-
-const users = {};
 
 io.on("connection", (socket) => {
   //Penser a conserver le socket pour pouvoir s'en servir plus tard
@@ -55,7 +55,6 @@ io.on("connection", (socket) => {
 
   const handleSetUser = (username) => {
     users[username] = socket;
-    console.log(users.length);
   };
 
   socket.on("@authenticate", initAuth(authenticate, handleSetUser));
