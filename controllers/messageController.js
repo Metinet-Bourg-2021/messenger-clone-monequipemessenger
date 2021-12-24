@@ -10,7 +10,11 @@ const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const User = require("../models/User");
 
-const saveMessage = async ({ token, conversation_id, content }, callback) => {
+const saveMessage = async (
+    { token, conversation_id, content },
+    callback,
+    users
+) => {
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     const userOfToken = await User.findById(decodedToken.userId);
@@ -30,9 +34,16 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
     });
 
     await Conversation.updateOne(
-      { _id: conversation_id },
-      { messages: [...conversation.messages, createdMessage._id] }
+        { _id: conversation_id },
+        { messages: [...conversation.messages, createdMessage._id] }
     );
+
+    conversation.participants.forEach((participant) => {
+      users[participant]?.emit("@messageDelivered", {
+        conversation_id,
+        message: { ...createdMessage._doc, id: createdMessage._id },
+      });
+    });
 
     return callback({
       code: SUCCESS,
@@ -44,12 +55,16 @@ const saveMessage = async ({ token, conversation_id, content }, callback) => {
 };
 
 const deleteMessage = async (
-  { token, conversation_id, message_id },
-  callback
+    { token, conversation_id, message_id },
+    callback,
+    users
 ) => {
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     const userOfToken = await User.findById(decodedToken.userId);
+
+    const conversation = await Conversation.findOne({ _id: conversation_id });
+    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
     //REAL DELETE
     const deletedMessage = await Message.findOneAndDelete({
@@ -58,8 +73,8 @@ const deleteMessage = async (
     });
 
     await Conversation.findOneAndUpdate(
-      { _id: conversation_id },
-      { $pull: { messages: message_id } }
+        { _id: conversation_id },
+        { $pull: { messages: message_id } }
     ).exec();
 
     //FAKE DELETE
@@ -67,6 +82,13 @@ const deleteMessage = async (
     //   { _id: message_id },
     //   { deleted: true }
     // );
+
+    conversation.participants.forEach((participant) => {
+      users[participant]?.emit("@messageDeleted", {
+        conversation_id,
+        message_id,
+      });
+    });
 
     return callback({
       code: SUCCESS,
@@ -78,25 +100,29 @@ const deleteMessage = async (
 };
 
 const editMessage = async (
-  { token, conversation_id, message_id, content },
-  callback,
-  socket
+    { token, conversation_id, message_id, content },
+    callback,
+    users
 ) => {
   try {
-    const message = await Message.findById(message_id);
+    const conversation = await Conversation.findById(conversation_id);
+    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
+    const message = await Message.findById(message_id);
     if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
     const updatedMessage = await Message.findOneAndUpdate(
-      { _id: message_id },
-      { content: content },
-      { new: true }
+        { _id: message_id },
+        { content: content },
+        { new: true }
     );
     await Message.findById(message_id);
 
-    socket.emit("@messageEdited", {
-      conversation_id,
-      message: { ...updatedMessage._doc, id: updatedMessage._id },
+    conversation.participants.forEach((participant) => {
+      users[participant]?.emit("@messageEdited", {
+        conversation_id,
+        message: { ...updatedMessage._doc, id: updatedMessage._id },
+      });
     });
 
     return callback({
@@ -112,9 +138,9 @@ const editMessage = async (
 };
 
 const reactMessage = async (
-  { token, conversation_id, message_id, reaction },
-  callback,
-  users
+    { token, conversation_id, message_id, reaction },
+    callback,
+    users
 ) => {
   const possibleValues = ["HEART", "HAPPY", "SAD", "THUMB"];
   if (!possibleValues.find((value) => value === reaction))
@@ -131,13 +157,13 @@ const reactMessage = async (
     if (!message) return callback({ code: NOT_FOUND_MESSAGE });
 
     const updatedMessage = await Message.findOneAndUpdate(
-      { _id: message_id },
-      {
-        $set: {
-          [`reactions.${userOfToken.username}`]: reaction,
+        { _id: message_id },
+        {
+          $set: {
+            [`reactions.${userOfToken.username}`]: reaction,
+          },
         },
-      },
-      { new: true }
+        { new: true }
     );
 
     conversation.participants.forEach((participant) => {
@@ -157,8 +183,9 @@ const reactMessage = async (
 };
 
 const replyMessage = async (
-  { token, conversation_id, message_id, content },
-  callback
+    { token, conversation_id, message_id, content },
+    callback,
+    users
 ) => {
   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
   const userOfToken = await User.findById(decodedToken.userId);
@@ -182,9 +209,16 @@ const replyMessage = async (
     });
 
     await Conversation.updateOne(
-      { _id: conversation_id },
-      { messages: [...conversation.messages, createdMessage._id] }
+        { _id: conversation_id },
+        { messages: [...conversation.messages, createdMessage._id] }
     );
+
+    conversation.participants.forEach((participant) => {
+      users[participant]?.emit("@messageDelivered", {
+        conversation_id,
+        message: { ...createdMessage._doc, id: createdMessage._id },
+      });
+    });
 
     return callback({
       code: SUCCESS,

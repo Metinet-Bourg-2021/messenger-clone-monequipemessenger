@@ -74,13 +74,13 @@ io.on("connection", (socket) => {
 
   socket.on("@getConversations", checkAuth(getConversations));
 
-  socket.on("@postMessage", checkAuth(saveMessage));
+  socket.on("@postMessage", checkAuth(saveMessage, users));
 
   socket.on("@seeConversation", seeConversation);
-  socket.on("@replyMessage", checkAuth(replyMessage));
+  socket.on("@replyMessage", checkAuth(replyMessage, users));
   socket.on("@editMessage", checkAuth(editMessage, users));
   socket.on("@reactMessage", checkAuth(reactMessage, users));
-  socket.on("@deleteMessage", checkAuth(deleteMessage));
+  socket.on("@deleteMessage", checkAuth(deleteMessage, users));
 
   socket.on("disconnect", (reason) => {});
 });
