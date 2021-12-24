@@ -63,12 +63,12 @@ io.on("connection", (socket) => {
 
   socket.on(
     "@getOrCreateOneToOneConversation",
-    checkAuth(createOneToOneConversation)
+    checkAuth(createOneToOneConversation, users)
   );
 
   socket.on(
     "@createManyToManyConversation",
-    checkAuth(createManyToManyConversation)
+    checkAuth(createManyToManyConversation, users)
   );
 
   socket.on("@getConversations", checkAuth(getConversations));

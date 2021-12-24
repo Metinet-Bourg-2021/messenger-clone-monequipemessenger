@@ -3,12 +3,19 @@ const {
   SUCCESS,
   NOT_FOUND_CONVERSATION,
   NOT_FOUND_MESSAGE,
+  NOT_VALID_USERNAMES,
 } = require("../codes");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 
-const createOneToOneConversation = async ({ token, username }, callback) => {
+const createOneToOneConversation = async (
+  { token, username },
+  callback,
+  users
+) => {
   const user = await User.find({ username });
+
+  if (!user) return callback({ code: NOT_VALID_USERNAMES, data: {} });
 
   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
   const userOfToken = await User.findById(decodedToken.userId);
@@ -25,6 +32,15 @@ const createOneToOneConversation = async ({ token, username }, callback) => {
       typing: {},
     });
 
+    createdConversation.participants.forEach((participant) =>
+      users[participant]?.emit("@conversationCreated", {
+        conversation: {
+          ...createdConversation._doc,
+          id: createdConversation._id,
+        },
+      })
+    );
+
     return callback({
       code: SUCCESS,
       data: {
@@ -39,7 +55,11 @@ const createOneToOneConversation = async ({ token, username }, callback) => {
   }
 };
 
-const createManyToManyConversation = async ({ token, usernames }, callback) => {
+const createManyToManyConversation = async (
+  { token, usernames },
+  callback,
+  usersb
+) => {
   //Get existing users
   const users = await User.find({ username: usernames });
 
@@ -61,6 +81,15 @@ const createManyToManyConversation = async ({ token, usernames }, callback) => {
       updated_at: Date.now(),
       seen: {},
       typing: {},
+    });
+    console.log(createdConversation.participants);
+    createdConversation.participants.forEach((participant) => {
+      usersb[participant]?.emit("@conversationCreated", {
+        conversation: {
+          ...createdConversation._doc,
+          id: createdConversation._id,
+        },
+      });
     });
 
     return callback({
