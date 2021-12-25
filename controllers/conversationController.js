@@ -139,11 +139,11 @@ const seeConversation = async (
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
     const userOfToken = await User.findById(decodedToken.userId);
 
-    const conversation = await Conversation.findById(conversation_id);
-    if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
+    const oldConversation = await Conversation.findById(conversation_id);
+    if (!oldConversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
     if (
-      !conversation.messages.find(
+      !oldConversation.messages.find(
         (message) => message.toString() === message_id
       )
     )
@@ -167,14 +167,18 @@ const seeConversation = async (
         updatedConversation.seen[participant] = -1;
     });
 
-    updatedConversation.participants.forEach((participant) =>
-      socketsByUser[participant]?.emit("@conversationSeen", {
-        conversation: {
-          ...updatedConversation._doc,
-          id: updatedConversation._id,
-        },
-      })
-    );
+    const conversation = {
+      ...updatedConversation._doc,
+      id: updatedConversation._id,
+      messages: updatedConversation.messages.map((message) => ({
+        ...message._doc,
+        id: message._id,
+      })),
+    };
+
+    conversation.participants.forEach((participant) => {
+      socketsByUser[participant]?.emit("@conversationSeen", { conversation });
+    });
 
     return callback({
       code: SUCCESS,
