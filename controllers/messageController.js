@@ -10,14 +10,11 @@ const Message = require("../models/Message");
 const User = require("../models/User");
 
 const saveMessage = async (
-  { token, conversation_id, content },
+  { userOfToken, conversation_id, content },
   callback,
   socketsByUser
 ) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    const userOfToken = await User.findById(decodedToken.userId);
-
     const conversation = await Conversation.findOne({ _id: conversation_id });
     if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
@@ -54,14 +51,11 @@ const saveMessage = async (
 };
 
 const deleteMessage = async (
-  { token, conversation_id, message_id },
+  { userOfToken, conversation_id, message_id },
   callback,
   socketsByUser
 ) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    const userOfToken = await User.findById(decodedToken.userId);
-
     const conversation = await Conversation.findOne({ _id: conversation_id });
     if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
@@ -136,7 +130,7 @@ const editMessage = async (
 };
 
 const reactMessage = async (
-  { token, conversation_id, message_id, reaction },
+  { userOfToken, conversation_id, message_id, reaction },
   callback,
   socketsByUser
 ) => {
@@ -147,9 +141,6 @@ const reactMessage = async (
   try {
     const conversation = await Conversation.findById(conversation_id);
     if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
-
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    const userOfToken = await User.findById(decodedToken.userId);
 
     const message = await Message.findById(message_id);
     if (!message) return callback({ code: NOT_FOUND_MESSAGE });
@@ -181,13 +172,10 @@ const reactMessage = async (
 };
 
 const replyMessage = async (
-  { token, conversation_id, message_id, content },
+  { userOfToken, conversation_id, message_id, content },
   callback,
   socketsByUser
 ) => {
-  const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-  const userOfToken = await User.findById(decodedToken.userId);
-
   try {
     const conversation = await Conversation.findOne({ _id: conversation_id });
     if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });

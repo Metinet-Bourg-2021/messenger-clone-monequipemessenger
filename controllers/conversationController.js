@@ -10,16 +10,13 @@ const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 
 const createOneToOneConversation = async (
-  { token, username },
+  { userOfToken, username },
   callback,
   socketsByUser
 ) => {
   const user = await User.find({ username });
 
   if (!user) return callback({ code: NOT_VALID_USERNAMES, data: {} });
-
-  const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-  const userOfToken = await User.findById(decodedToken.userId);
 
   try {
     const createdConversation = await Conversation.create({
@@ -57,17 +54,12 @@ const createOneToOneConversation = async (
 };
 
 const createManyToManyConversation = async (
-  { token, usernames },
+  { userOfToken, usernames },
   callback,
   socketsByUser
 ) => {
   //Get existing users
   const users = await User.find({ username: usernames });
-
-  //Add creator user
-  const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-  const userOfToken = await User.findById(decodedToken.userId);
-  //   users = [...users, userOfToken.username];
 
   try {
     const createdConversation = await Conversation.create({
@@ -107,10 +99,7 @@ const createManyToManyConversation = async (
   }
 };
 
-const getConversations = async ({ token }, callback) => {
-  const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-  const userOfToken = await User.findById(decodedToken.userId);
-
+const getConversations = async ({ userOfToken }, callback) => {
   const conversations = await Conversation.find({
     participants: userOfToken.username,
   }).populate("messages");
@@ -131,13 +120,10 @@ const getConversations = async ({ token }, callback) => {
 };
 
 const seeConversation = async (
-  { token, conversation_id, message_id },
+  { userOfToken, conversation_id, message_id },
   callback
 ) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    const userOfToken = await User.findById(decodedToken.userId);
-
     const conversation = await Conversation.findById(conversation_id);
     if (!conversation) return callback({ code: NOT_FOUND_CONVERSATION });
 
@@ -178,14 +164,11 @@ const seeConversation = async (
 };
 
 const removeParticipant = async (
-  { conversation_id, token, username },
+  { conversation_id, userOfToken, username },
   callback,
   socketsByUser
 ) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    const userOfToken = await User.findById(decodedToken.userId);
-
     const conversation = await Conversation.findById(conversation_id);
     if (!conversation._doc)
       return callback({ code: NOT_FOUND_CONVERSATION, data: {} });
@@ -220,14 +203,11 @@ const removeParticipant = async (
 };
 
 const addParticipant = async (
-  { token, conversation_id, username },
+  { userOfToken, conversation_id, username },
   callback,
   socketsByUser
 ) => {
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    const userOfToken = await User.findById(decodedToken.userId);
-
     const conversation = await Conversation.findById(conversation_id);
 
     if (!conversation)

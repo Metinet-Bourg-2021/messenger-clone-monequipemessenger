@@ -12,7 +12,7 @@ const checkAuth = (fct, socket) => async (params, callback) => {
     const userId = decodedToken.userId;
     const isUserIDExist = await User.findById(userId);
     if (userId && isUserIDExist) {
-      return fct(params, callback, socket);
+      return fct({ ...params, userOfToken: isUserIDExist }, callback, socket);
     } else {
       return callback({ code: NOT_FOUND_USER, data: {} });
     }
