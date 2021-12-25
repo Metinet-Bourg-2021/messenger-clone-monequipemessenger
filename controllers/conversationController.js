@@ -72,7 +72,7 @@ const getConversations = async ({ userOfToken }, callback) => {
     data: {
       conversations: conversations.map((conversation) => ({
         ...conversation._doc,
-        id: conversation._doc._id,
+        id: conversation._id,
         messages: conversation._doc.messages.map((message) => ({
           id: message._id,
           ...message._doc,
@@ -83,8 +83,9 @@ const getConversations = async ({ userOfToken }, callback) => {
 };
 
 const seeConversation = async (
-  { userOfToken, conversation_id, message_id },
-  callback
+  { conversation_id, message_id, userOfToken },
+  callback,
+  socketsByUser
 ) => {
   try {
     const conversation = await Conversation.findById(conversation_id);
@@ -103,13 +104,29 @@ const seeConversation = async (
         $set: {
           [`seen.${userOfToken.username}`]: { message_id, time: new Date() },
         },
-      }
-    );
+      },
+      { new: true }
+    )
+      .populate("messages")
+      .exec();
 
     //set all never seen conversation user's to -1
     updatedConversation.participants.forEach((participant) => {
       if (!updatedConversation.seen[participant])
         updatedConversation.seen[participant] = -1;
+    });
+
+    updatedConversation.participants.forEach((participant) => {
+      socketsByUser[participant]?.emit("@conversationSeen", {
+        conversation: {
+          ...updatedConversation._doc,
+          id: updatedConversation._id,
+          messages: updatedConversation.messages.map((message) => ({
+            ...message._doc,
+            id: message._id,
+          })),
+        },
+      });
     });
 
     return callback({
