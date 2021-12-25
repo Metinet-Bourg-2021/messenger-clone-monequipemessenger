@@ -77,7 +77,7 @@ io.on("connection", (socket) => {
 
   socket.on("@postMessage", checkAuth(saveMessage, socketsByUser));
 
-  socket.on("@seeConversation", seeConversation);
+  socket.on("@seeConversation", checkAuth(seeConversation, socketsByUser));
   socket.on("@removeParticipant", checkAuth(removeParticipant, socketsByUser));
   socket.on("@addParticipant", checkAuth(addParticipant, socketsByUser));
 

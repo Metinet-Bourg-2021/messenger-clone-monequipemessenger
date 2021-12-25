@@ -132,7 +132,8 @@ const getConversations = async ({ token }, callback) => {
 
 const seeConversation = async (
   { token, conversation_id, message_id },
-  callback
+  callback,
+  socketsByUser
 ) => {
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
@@ -154,14 +155,26 @@ const seeConversation = async (
         $set: {
           [`seen.${userOfToken.username}`]: { message_id, time: new Date() },
         },
-      }
-    );
+      },
+      { new: true }
+    )
+      .populate("messages")
+      .exec();
 
     //set all never seen conversation user's to -1
     updatedConversation.participants.forEach((participant) => {
       if (!updatedConversation.seen[participant])
         updatedConversation.seen[participant] = -1;
     });
+
+    updatedConversation.participants.forEach((participant) =>
+      socketsByUser[participant]?.emit("@conversationSeen", {
+        conversation: {
+          ...updatedConversation._doc,
+          id: updatedConversation._id,
+        },
+      })
+    );
 
     return callback({
       code: SUCCESS,
