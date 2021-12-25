@@ -8,9 +8,8 @@ const { Server } = require("socket.io");
 const checkAuth = require("./auth");
 const config = require("./config.json");
 const {
-  createManyToManyConversation,
+  createConversation,
   getConversations,
-  createOneToOneConversation,
   seeConversation,
   removeParticipant,
   addParticipant,
@@ -65,12 +64,12 @@ io.on("connection", (socket) => {
 
   socket.on(
     "@getOrCreateOneToOneConversation",
-    checkAuth(createOneToOneConversation, socketsByUser)
+    checkAuth(createConversation, socketsByUser)
   );
 
   socket.on(
     "@createManyToManyConversation",
-    checkAuth(createManyToManyConversation, socketsByUser)
+    checkAuth(createConversation, socketsByUser)
   );
 
   socket.on("@getConversations", checkAuth(getConversations));

@@ -9,19 +9,28 @@ const {
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 
-const createOneToOneConversation = async (
-  { userOfToken, username },
+const createConversation = async (
+  { userOfToken, username, usernames },
   callback,
   socketsByUser
 ) => {
-  const user = await User.find({ username });
+  let users;
+  if (username) {
+    const otherUser = await User.findOne({ username });
+    if (otherUser.username === username)
+      users = [username, userOfToken.username];
+  } else if (usernames) {
+    const otherUsers = await User.find({ username: usernames });
+    if (otherUsers.length === usernames.length)
+      users = [userOfToken.username, ...usernames];
+  }
 
-  if (!user) return callback({ code: NOT_VALID_USERNAMES, data: {} });
+  if (!users) return callback({ code: NOT_VALID_USERNAMES, data: {} });
 
   try {
     const createdConversation = await Conversation.create({
-      type: "one_to_one",
-      participants: [username, userOfToken.username],
+      type: users.length === 2 ? "one_to_one" : "many_to_many",
+      participants: users,
       messages: [],
       title: null,
       theme: "BLUE",
@@ -50,52 +59,6 @@ const createOneToOneConversation = async (
     });
   } catch (err) {
     console.error(err);
-  }
-};
-
-const createManyToManyConversation = async (
-  { userOfToken, usernames },
-  callback,
-  socketsByUser
-) => {
-  //Get existing users
-  const users = await User.find({ username: usernames });
-
-  try {
-    const createdConversation = await Conversation.create({
-      type: "many_to_many",
-      participants: [
-        ...users.map((user) => user.username),
-        userOfToken.username,
-      ],
-      messages: [],
-      title: null,
-      theme: "BLUE",
-      updated_at: Date.now(),
-      seen: {},
-      typing: {},
-    });
-
-    createdConversation.participants.forEach((participant) => {
-      socketsByUser[participant]?.emit("@conversationCreated", {
-        conversation: {
-          ...createdConversation._doc,
-          id: createdConversation._id,
-        },
-      });
-    });
-
-    return callback({
-      code: SUCCESS,
-      data: {
-        conversation: {
-          id: createdConversation._id,
-          ...createdConversation._doc,
-        },
-      },
-    });
-  } catch (error) {
-    console.error(error);
   }
 };
 
@@ -247,8 +210,7 @@ const addParticipant = async (
 };
 
 module.exports = {
-  createOneToOneConversation,
-  createManyToManyConversation,
+  createConversation,
   getConversations,
   seeConversation,
   removeParticipant,

@@ -75,7 +75,7 @@ const authenticate = async (
   }
 };
 
-const getUsers = async ({ token }, callback) => {
+const getUsers = async ({}, callback) => {
   const users = await User.find();
   const data = users.map((user) => ({
     username: user.username,
