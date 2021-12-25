@@ -31,6 +31,9 @@ app.get("/", (req, res) => {
 
 server.listen(config.port, () => {
   console.log("Server is listening");
+  console.log(
+    "Pensez à recharger vos pages/navigateurs afin de réinitialiser les sockets"
+  );
 });
 
 mongoose.connect(
