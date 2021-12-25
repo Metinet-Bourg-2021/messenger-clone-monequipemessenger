@@ -116,7 +116,6 @@ const editMessage = async (
       { content: content },
       { new: true }
     );
-    await Message.findById(message_id);
 
     conversation.participants.forEach((participant) => {
       socketsByUser[participant]?.emit("@messageEdited", {
