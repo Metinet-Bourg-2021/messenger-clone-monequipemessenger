@@ -201,7 +201,9 @@ const removeParticipant = async (
       { _id: conversation_id },
       { $pull: { participants: username } },
       { new: true }
-    );
+    )
+      .populate("messages")
+      .exec();
 
     updatedConversation.participants.forEach((participant) => {
       socketsByUser[participant]?.emit("@participantRemoved", {
@@ -217,10 +219,58 @@ const removeParticipant = async (
   return callback({ code: SUCCESS, data: {} });
 };
 
+const addParticipant = async (
+  { token, conversation_id, username },
+  callback,
+  socketsByUser
+) => {
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+    const userOfToken = await User.findById(decodedToken.userId);
+
+    const conversation = await Conversation.findById(conversation_id);
+
+    if (!conversation)
+      return callback({ code: NOT_FOUND_CONVERSATION, data: {} });
+
+    if (
+      !conversation.participants.find(
+        (participant) => participant === userOfToken.username
+      )
+    )
+      return callback({ code: NOT_VALID_CONTENT });
+
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { _id: conversation_id },
+      { $push: { participants: username } },
+      { new: true }
+    )
+      .populate("messages")
+      .exec();
+
+    updatedConversation.participants.forEach((participant) =>
+      socketsByUser[participant]?.emit("@participantAdded", {
+        conversation: {
+          ...updatedConversation._doc,
+          id: updatedConversation._id,
+        },
+      })
+    );
+
+    return callback({
+      code: SUCCESS,
+      data: { ...updatedConversation._doc, id: updatedConversation._id },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   createOneToOneConversation,
   createManyToManyConversation,
   getConversations,
   seeConversation,
   removeParticipant,
+  addParticipant,
 };
