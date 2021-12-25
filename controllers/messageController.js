@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const {
   SUCCESS,
   NOT_FOUND_MESSAGE,
@@ -7,7 +6,6 @@ const {
 } = require("../codes");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
-const User = require("../models/User");
 
 const saveMessage = async (
   { userOfToken, conversation_id, content },

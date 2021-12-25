@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const {
   SUCCESS,
   NOT_FOUND_CONVERSATION,
