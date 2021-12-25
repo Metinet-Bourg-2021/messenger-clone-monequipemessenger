@@ -4,6 +4,7 @@ const {
   NOT_FOUND_CONVERSATION,
   NOT_FOUND_MESSAGE,
   NOT_VALID_USERNAMES,
+  NOT_VALID_CONTENT,
 } = require("../codes");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
@@ -82,7 +83,7 @@ const createManyToManyConversation = async (
       seen: {},
       typing: {},
     });
-    console.log(createdConversation.participants);
+
     createdConversation.participants.forEach((participant) => {
       socketsByUser[participant]?.emit("@conversationCreated", {
         conversation: {
@@ -176,9 +177,50 @@ const seeConversation = async (
   }
 };
 
+const removeParticipant = async (
+  { conversation_id, token, username },
+  callback,
+  socketsByUser
+) => {
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+    const userOfToken = await User.findById(decodedToken.userId);
+
+    const conversation = await Conversation.findById(conversation_id);
+    if (!conversation._doc)
+      return callback({ code: NOT_FOUND_CONVERSATION, data: {} });
+
+    if (
+      !conversation._doc.participants.find(
+        (participant) => participant === userOfToken.username
+      )
+    )
+      return callback({ code: NOT_VALID_CONTENT, data: {} });
+
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { _id: conversation_id },
+      { $pull: { participants: username } },
+      { new: true }
+    );
+
+    updatedConversation.participants.forEach((participant) => {
+      socketsByUser[participant]?.emit("@participantRemoved", {
+        conversation: {
+          ...updatedConversation._doc,
+          id: updatedConversation._id,
+        },
+      });
+    });
+  } catch (err) {
+    console.error(err);
+  }
+  return callback({ code: SUCCESS, data: {} });
+};
+
 module.exports = {
   createOneToOneConversation,
   createManyToManyConversation,
   getConversations,
   seeConversation,
+  removeParticipant,
 };

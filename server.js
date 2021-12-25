@@ -12,6 +12,7 @@ const {
   getConversations,
   createOneToOneConversation,
   seeConversation,
+  removeParticipant,
 } = require("./controllers/conversationController");
 const {
   saveMessage,
@@ -76,6 +77,8 @@ io.on("connection", (socket) => {
   socket.on("@postMessage", checkAuth(saveMessage, socketsByUser));
 
   socket.on("@seeConversation", seeConversation);
+  socket.on("@removeParticipant", checkAuth(removeParticipant, socketsByUser));
+
   socket.on("@replyMessage", checkAuth(replyMessage, socketsByUser));
   socket.on("@editMessage", checkAuth(editMessage, socketsByUser));
   socket.on("@reactMessage", checkAuth(reactMessage, socketsByUser));
