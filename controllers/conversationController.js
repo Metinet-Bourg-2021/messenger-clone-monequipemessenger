@@ -120,7 +120,7 @@ const getConversations = async ({ token }, callback) => {
     data: {
       conversations: conversations.map((conversation) => ({
         ...conversation._doc,
-        id: conversation._doc._id,
+        id: conversation._id,
         messages: conversation._doc.messages.map((message) => ({
           id: message._id,
           ...message._doc,
@@ -176,7 +176,7 @@ const seeConversation = async (
             ...message._doc,
             id: message._id,
           })),
-        }
+        },
       });
     });
 
