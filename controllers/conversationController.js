@@ -27,6 +27,29 @@ const createConversation = async (
 
   if (!users) return callback({ code: NOT_VALID_USERNAMES, data: {} });
 
+  if (users.length === 2) {
+    const isExistingConversation = await Conversation.findOne({
+      participants: users,
+    })
+      .populate("messages")
+      .exec();
+
+    if (isExistingConversation)
+      return callback({
+        code: SUCCESS,
+        data: {
+          conversation: {
+            ...isExistingConversation._doc,
+            id: isExistingConversation._id,
+            messages: isExistingConversation._doc.messages.map((message) => ({
+              id: message._id,
+              ...message._doc,
+            })),
+          },
+        },
+      });
+  }
+
   try {
     const createdConversation = await Conversation.create({
       type: users.length === 2 ? "one_to_one" : "many_to_many",
